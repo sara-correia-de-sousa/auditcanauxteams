@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Canaux Teams – IDS Media</title>
+<style>
+:root {
+  --navy:#1a2657; --pink:#e8184d; --light:#f5f6fa;
+  --border:#e2e5f0; --text:#1a2657; --muted:#9a9fb0;
+  --white:#fff; --green:#27ae60;
+  --col-use:#eef6ff; --col-keep:#fff0f3;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--light);color:var(--text);font-size:13px;}
+
+/* HEADER */
+.header{position:relative;overflow:hidden;background:var(--navy);border-bottom:4px solid var(--pink);}
+.header-banner{width:100%;display:block;height:120px;object-fit:cover;object-position:center;}
+.header-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 30px;}
+.header-center h1{font-size:20px;font-weight:900;color:white;text-shadow:0 2px 8px rgba(0,0,0,.4);}
+.header-center p{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px;text-shadow:0 1px 4px rgba(0,0,0,.3);}
+.header-stats{display:flex;align-items:stretch;gap:1px;}
+.hstat{padding:8px 16px;text-align:center;display:flex;flex-direction:column;justify-content:center;background:rgba(0,0,0,.3);border-radius:8px;}
+.hstat:last-child{background:var(--pink);}
+.hstat-n{font-size:20px;font-weight:900;color:white;line-height:1;}
+.hstat-l{font-size:9px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+
+/* USER BAR */
+.user-bar{background:white;border-bottom:2px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.user-bar-title{font-size:11px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.user-field{display:flex;align-items:center;gap:8px;}
+.user-field label{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.user-field input{border:2px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;font-family:inherit;outline:none;min-width:150px;transition:border .15s;}
+.user-field input:focus{border-color:var(--pink);background:white;}
+
+/* PROGRESS */
+.prog-bar-wrap{background:var(--navy);padding:6px 20px;display:flex;align-items:center;gap:12px;}
+.prog-bar{flex:1;height:5px;background:rgba(255,255,255,.15);border-radius:10px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,#4a7fff,var(--pink));border-radius:10px;transition:width .4s;}
+.prog-label{font-size:11px;color:rgba(255,255,255,.7);white-space:nowrap;}
+.prog-pct{font-size:12px;font-weight:800;color:var(--pink);}
+
+/* LEGEND */
+.legend{background:white;border-bottom:2px solid var(--border);padding:10px 20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+.legend-title{font-size:11px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.4px;}
+.leg-group{display:flex;align-items:center;gap:8px;}
+.leg-pill{padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;}
+.leg-use{background:var(--col-use);color:#1a5fb0;border:1.5px solid #b8d0f8;}
+.leg-keep{background:var(--col-keep);color:var(--pink);border:1.5px solid #f8b8c8;}
+.leg-sep{color:var(--muted);font-size:10px;}
+
+/* TABLE WRAP */
+.table-outer{overflow-x:auto;padding:16px 20px 80px;}
+
+/* MAIN TABLE */
+table{border-collapse:separate;border-spacing:0 4px;width:100%;min-width:900px;}
+
+/* COLUMN GROUP HEADERS */
+.col-group-row th{padding:8px 6px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid;text-align:center;}
+.th-info{background:var(--navy);color:white;border-bottom-color:var(--navy);}
+.th-use{background:var(--col-use);color:#1a5fb0;border-bottom-color:#b8d0f8;}
+.th-keep{background:var(--col-keep);color:var(--pink);border-bottom-color:#f8b8c8;}
+.th-note{background:#f0f7ef;color:#2e7d32;border-bottom-color:#a5d6a7;}
+
+/* SUB HEADERS */
+.sub-row th{padding:6px 6px;font-size:10px;font-weight:700;text-align:center;color:var(--muted);background:var(--white);border-bottom:2px solid var(--border);}
+.sub-row th.canal-head{text-align:left;min-width:200px;}
+
+/* DATA ROWS */
+tbody tr{background:white;transition:background .1s;}
+tbody tr:hover{background:#f8f9ff;}
+td{padding:8px 6px;border-bottom:1px solid var(--border);vertical-align:middle;}
+td:first-child{border-left:3px solid transparent;}
+tbody tr:hover td:first-child{border-left-color:var(--pink);}
+
+/* CANAL CELL */
+.canal-cell{min-width:200px;padding:8px 10px;}
+.canal-num{font-size:9px;font-weight:900;color:var(--muted);margin-bottom:2px;}
+.canal-name{font-weight:800;color:var(--navy);font-size:12px;line-height:1.3;}
+.act-badge{display:inline-block;font-size:9px;padding:1px 7px;border-radius:8px;font-weight:700;margin-top:3px;}
+.ar{background:#edfaf3;color:#1e9e5e;}
+.am{background:#fff8e6;color:#b07800;}
+.ao{background:#fff0f3;color:var(--pink);}
+.aa{background:#f0f0f0;color:#888;}
+
+/* RADIO/CHECK CELLS */
+.check-cell{text-align:center;min-width:80px;}
+.check-cell.use-col{background:rgba(74,127,255,.04);}
+.check-cell.keep-col{background:rgba(232,24,77,.04);}
+
+/* Custom radio */
+.radio-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
+.radio-wrap input[type=radio],.radio-wrap input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--navy);}
+.radio-wrap input[type=radio].use-r{accent-color:#1a5fb0;}
+.radio-wrap input[type=radio].keep-r,.radio-wrap input[type=checkbox].keep-r{accent-color:var(--pink);}
+
+/* NOTE CELL */
+.note-cell{min-width:180px;padding:6px 8px;}
+textarea.note{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:5px 8px;font-size:11px;font-family:inherit;resize:vertical;min-height:38px;outline:none;background:var(--light);transition:border .15s;}
+textarea.note:focus{border-color:var(--navy);background:white;}
+
+/* DIVIDER between use/keep groups */
+.divider-col{width:6px;background:var(--border);padding:0 !important;}
+
+/* FOOTER */
+.footer{position:fixed;bottom:0;left:0;right:0;background:white;border-top:2px solid var(--border);padding:10px 20px;display:flex;gap:10px;justify-content:flex-end;z-index:50;box-shadow:0 -4px 16px rgba(26,38,87,.08);}
+.btn{padding:9px 20px;border:none;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}
+.btn-ghost{background:white;color:var(--navy);border:2px solid var(--border);}
+.btn-navy{background:var(--navy);color:white;}
+.btn-pink{background:var(--pink);color:white;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(26,38,87,.4);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:white;border-radius:14px;padding:22px;width:560px;max-width:95vw;display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 40px rgba(26,38,87,.2);}
+.modal h3{font-size:15px;font-weight:800;color:var(--navy);}
+.modal textarea{min-height:200px;font-family:monospace;font-size:10px;border:2px solid var(--border);border-radius:8px;padding:10px;outline:none;resize:vertical;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <img class="header-banner" src="https://salonlyon-idsmedia.netlify.app/logo-ids.png" alt="IDS Media Banner" onerror="this.style.display='none'">
+  <div class="header-overlay">
+    <div class="header-center">
+      <h1>📋 Audit des Canaux Teams</h1>
+      <p>Évaluez chaque canal en indiquant son utilisation, sa conservation et vos commentaires</p>
+    </div>
+    <div class="header-stats">
+      <div class="hstat"><div class="hstat-n">21</div><div class="hstat-l">Canaux</div></div>
+      <div class="hstat"><div class="hstat-n" id="statFilled">0</div><div class="hstat-l">Remplis</div></div>
+      <div class="hstat"><div class="hstat-n" id="statKeep">0</div><div class="hstat-l">À garder</div></div>
+      <div class="hstat"><div class="hstat-n" id="statDel">0</div><div class="hstat-l">À suppr.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- USER BAR -->
+<div class="user-bar">
+  <span class="user-bar-title">👤 Mes infos</span>
+  <div class="user-field"><label>Prénom</label><input id="gPrenom" type="text" placeholder="Ex : Marie" oninput="applyGlobal()"></div>
+  <div class="user-field"><label>Cercle</label><input id="gCercle" type="text" placeholder="Ex : Commercial" oninput="applyGlobal()"></div>
+</div>
+
+<!-- PROGRESS -->
+<div class="prog-bar-wrap">
+  <div class="prog-label" id="progLabel">0 / 21 canaux évalués</div>
+  <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  <div class="prog-pct" id="progPct">0%</div>
+</div>
+
+
+
+<!-- TABLE -->
+<div class="table-outer">
+<table id="mainTable">
+  <thead>
+    <!-- Groupe headers -->
+    <tr class="col-group-row">
+      <th class="th-info" colspan="2">Canal</th>
+      <th class="th-use" colspan="3">🔵 Utilisation</th>
+      <th class="th-keep" colspan="4">🔴 Conservation</th>
+      <th class="th-note" colspan="1">💬 Commentaire</th>
+    </tr>
+    <!-- Sub headers -->
+    <tr class="sub-row">
+      <th class="canal-head" colspan="2">Nom du canal</th>
+      <th>Régulièrement</th>
+      <th>Rarement</th>
+      <th>Jamais</th>
+      <th>À conserver</th>
+      <th>À fusionner</th>
+      <th>À supprimer</th>
+      <th>Je ne sais pas</th>
+      <th>Raison / remarque</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <button class="btn btn-ghost" onclick="resetAll()">🔄 Réinitialiser</button>
+  <button class="btn btn-navy" onclick="openExport()">⬇ Export CSV</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeExport()">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>⬇ Export CSV</h3>
+      <button onclick="closeExport()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">✕</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted)">Sélectionnez tout → Copiez → Collez dans Excel ou Google Sheets</p>
+    <textarea id="csvArea"></textarea>
+    <button onclick="selAll()" style="background:var(--navy);color:white;border:none;padding:10px;border-radius:20px;cursor:pointer;font-weight:800;font-size:12px">Tout sélectionner</button>
+  </div>
+</div>
+
+<script>
+const canaux = [
+  {name:'ACTUALITÉS DOOH',               act:'~2 mois', lv:'am'},
+  {name:'ACTUALITÉS OOH',                act:'~1 mois', lv:'am'},
+  {name:'ACTUALITÉS RSE - MISSION',      act:'13 jours',lv:'ar'},
+  {name:'ACTUALITÉS SAM',                act:'+1 an',   lv:'ao'},
+  {name:'ACTUALITES TS',                 act:'+1 an',   lv:'ao'},
+  {name:'BASIC FIT',                     act:'+1 an',   lv:'ao'},
+  {name:'BORNES QR CODES - FOCUS',       act:'+4 ans',  lv:'aa'},
+  {name:'COMMERCIAL',                    act:'5 mois',  lv:'am'},
+  {name:'CREA CLIENTS',                  act:'~2 mois', lv:'am'},
+  {name:'CSE',                           act:'+2 ans',  lv:'ao'},
+  {name:'DECISIONS PRISES',             act:'+2 ans',  lv:'ao'},
+  {name:'Général',                       act:'Actif',   lv:'ar'},
+  {name:'GOUVERNANCE PARTAGEE',          act:'29 jours',lv:'ar'},
+  {name:'INTERNATIONAL',                 act:'2 mois',  lv:'am'},
+  {name:'MARKETING',                     act:'+2 ans',  lv:'ao'},
+  {name:'MARKETING-SANTE.FR',            act:'6 mois',  lv:'am'},
+  {name:'PIGE',                          act:'+4 ans',  lv:'aa'},
+  {name:'PRODUCTION DE CONTENU',         act:'+5 ans',  lv:'aa'},
+  {name:'REMUNERATION',                  act:'28 jours',lv:'ar'},
+  {name:'TESTAMENT SOLIDAIRE',           act:'+5 ans',  lv:'aa'},
+  {name:'Work n Chill',                  act:'Actif',   lv:'ar'},
+];
+
+const lvlIcon = {ar:'🟢',am:'🟡',ao:'🟠',aa:'🔴'};
+let data = canaux.map(()=>({use:'',keep:'',note:'',prenom:'',cercle:''}));
+
+function applyGlobal(){
+  const p=document.getElementById('gPrenom').value.trim();
+  const c=document.getElementById('gCercle').value.trim();
+  data.forEach(d=>{d.prenom=p;d.cercle=c;});
+}
+
+function render(){
+  const tb=document.getElementById('tbody');
+  tb.innerHTML='';
+  canaux.forEach((c,i)=>{
+    const d=data[i];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="width:28px;padding:6px 4px;text-align:center">
+        <span style="background:var(--navy);color:white;font-size:9px;font-weight:900;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center">${i+1}</span>
+      </td>
+      <td class="canal-cell">
+        <div class="canal-name">${c.name}</div>
+        <span class="act-badge ${c.lv}">${lvlIcon[c.lv]} ${c.act}</span>
+      </td>
+      ${['reg','rare','never'].map(v=>`
+        <td class="check-cell use-col">
+          <label class="radio-wrap">
+            <input type="radio" name="use_${i}" class="use-r" value="${v}" ${d.use===v?'checked':''} onchange="upd(${i},'use',this.value)">
+          </label>
+        </td>`).join('')}
+      ${['keep','merge','delete','dunno'].map(v=>`
+        <td class="check-cell keep-col">
+          <label class="radio-wrap">
+            <input type="radio" name="keep_${i}" class="keep-r" value="${v}" ${d.keep===v?'checked':''} onchange="upd(${i},'keep',this.value)">
+          </label>
+        </td>`).join('')}
+      <td class="note-cell">
+        <textarea class="note" placeholder="Commentaire…" onchange="upd(${i},'note',this.value)">${d.note}</textarea>
+      </td>`;
+    tb.appendChild(tr);
+  });
+  updateStats();
+}
+
+function upd(i,field,val){
+  data[i][field]=val;
+  updateStats();
+}
+
+function updateStats(){
+  const filled=data.filter(d=>d.use&&d.keep).length;
+  const keep=data.filter(d=>d.keep==='keep').length;
+  const del=data.filter(d=>d.keep==='delete').length;
+  const pct=Math.round(filled/canaux.length*100);
+  document.getElementById('statFilled').textContent=filled;
+  document.getElementById('statKeep').textContent=keep;
+  document.getElementById('statDel').textContent=del;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progLabel').textContent=`${filled} / ${canaux.length} canaux évalués`;
+  document.getElementById('progPct').textContent=pct+'%';
+}
+
+function resetAll(){
+  if(!confirm('Réinitialiser toutes les réponses ?'))return;
+  data=canaux.map(()=>({use:'',keep:'',note:'',prenom:'',cercle:''}));
+  render();
+}
+
+function openExport(){
+  const p=document.getElementById('gPrenom').value.trim()||'—';
+  const c2=document.getElementById('gCercle').value.trim()||'—';
+  const uMap={reg:'Régulièrement',rare:'Rarement',never:'Jamais','':'—'};
+  const kMap={keep:'À conserver',merge:'À fusionner',delete:'À supprimer',dunno:'Ne sais pas','':'—'};
+  const h=['Prénom','Cercle','Canal','Activité','Utilisation','Conservation','Commentaire'];
+  const rows=canaux.map((c,i)=>[
+    p,c2,c.name,c.act,uMap[data[i].use],kMap[data[i].keep],data[i].note
+  ].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  document.getElementById('csvArea').value=[h.join(','),...rows].join('\n');
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeExport(){document.getElementById('modalBg').classList.remove('open');}
+function selAll(){const a=document.getElementById('csvArea');a.select();a.setSelectionRange(0,99999);}
+
+render();
+</script>
+</body>
+</html>
